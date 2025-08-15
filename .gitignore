@@ -1,0 +1,79 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.pytest_cache/
+.coverage
+.tox/
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.code-workspace
+.devcontainer/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+pose_detection.log
+
+# Application specific
+uploads/*
+
+# Keep uploads directory structure
+!uploads/.gitkeep
+
+# Docker
+.dockerignore
+
+# Temporary files
+tmp/
+temp/
+.tmp
+
+# Environment variables
+.env
+.env.local
+
+# Node modules (if any)
+node_modules/
+
+# Jupyter notebooks checkpoints
+.ipynb_checkpoints/
+
+# macOS
+.AppleDouble
+.LSOverride
+
+# Windows
+desktop.ini
+
+# Flask session files
+flask_session/
+
+# Cache directories
+.cache/

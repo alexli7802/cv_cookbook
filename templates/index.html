@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pose Detection - Sports CV Toolkit</title>
+    <meta name="description" content="Real-time pose detection for sports video analysis using MediaPipe">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #e8f5e8;
+            border-radius: 5px;
+            border: 2px solid #4CAF50;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .btn-primary { background-color: #4CAF50; color: white; }
+        .btn-secondary { background-color: #2196F3; color: white; }
+        .btn-danger { background-color: #f44336; color: white; }
+        
+        .btn:hover { opacity: 0.8; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .properties {
+            background-color: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .video-area {
+            background-color: #f8f9fa;
+            border: 3px solid #6c757d;
+            border-radius: 5px;
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .video-placeholder {
+            color: #6c757d;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        #videoFrame {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 3px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .loading-indicator {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .error-message {
+            display: none;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        
+        .keyboard-shortcuts {
+            background-color: #e3f2fd;
+            border: 1px solid #90caf9;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 15px;
+            font-size: 12px;
+        }
+        
+        .shortcuts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .shortcut {
+            display: flex;
+            justify-content: space-between;
+            font-family: monospace;
+        }
+        
+        .file-input { margin-right: 10px; }
+        
+        .progress {
+            width: 100%;
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background-color: #4CAF50;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .frame-controls {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .frame-slider { 
+            width: 100%; 
+            margin: 10px 0;
+            height: 8px;
+            border-radius: 4px;
+            background: #ddd;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        
+        .frame-slider:hover {
+            opacity: 1;
+        }
+        
+        .frame-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .confidence-indicator {
+            display: none;
+            margin-left: 10px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .confidence-high { background-color: #d4edda; color: #155724; }
+        .confidence-medium { background-color: #fff3cd; color: #856404; }
+        .confidence-low { background-color: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Pose Detection</h1>
+            <p>Upload a sports video to analyze pose and movement patterns using MediaPipe</p>
+        </div>
+        
+        <div class="controls">
+            <input type="file" id="videoInput" accept="video/*" style="display: none;">
+            <button id="selectBtn" class="btn btn-primary">Select Video</button>
+            <button id="playBtn" class="btn btn-secondary" disabled>Play</button>
+            <button id="stopBtn" class="btn btn-danger" disabled>Stop</button>
+        </div>
+        
+        <div class="video-area">
+            <div id="videoPlaceholder" class="video-placeholder">
+                <div>📹 Video will appear here</div>
+                <div style="font-size: 14px; margin-top: 10px; opacity: 0.7;">Supported formats: MP4, AVI, MOV, MKV (max 500MB)</div>
+            </div>
+            <img id="videoFrame" style="display: none;" alt="Pose detection frame">
+            <div id="loadingIndicator" class="loading-indicator">Loading...</div>
+        </div>
+        
+        <div id="errorMessage" class="error-message"></div>
+        
+        <div id="frameControls" class="frame-controls">
+            <div class="progress">
+                <div id="progressBar" class="progress-bar"></div>
+            </div>
+            <input type="range" id="frameSlider" class="frame-slider" min="0" max="100" value="0" aria-label="Video timeline">
+            <div class="frame-info">
+                <span>Frame: <span id="currentFrame">0</span> / <span id="totalFrames">0</span></span>
+                <span id="confidenceIndicator" class="confidence-indicator"></span>
+            </div>
+        </div>
+        
+        <div id="properties" class="properties">
+            No video loaded
+        </div>
+        
+        <div class="keyboard-shortcuts">
+            <strong>⌨️ Keyboard Shortcuts:</strong>
+            <div class="shortcuts-grid">
+                <div class="shortcut"><span>Space</span><span>Play/Pause</span></div>
+                <div class="shortcut"><span>←</span><span>Previous frame</span></div>
+                <div class="shortcut"><span>→</span><span>Next frame</span></div>
+                <div class="shortcut"><span>Home</span><span>First frame</span></div>
+                <div class="shortcut"><span>End</span><span>Last frame</span></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/video-player.js"></script>
+</body>
+</html>
